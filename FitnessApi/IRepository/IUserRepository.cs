@@ -1,4 +1,4 @@
-﻿using FitnessApi.Dto;
+﻿using FitnessApi.Dto.User;
 using FitnessApi.Model;
 
 namespace FitnessApi.IRepository

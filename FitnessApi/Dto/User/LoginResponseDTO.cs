@@ -1,4 +1,4 @@
-﻿namespace FitnessApi.Dto
+﻿namespace FitnessApi.Dto.User
 {
     public class LoginResponseDTO
     {

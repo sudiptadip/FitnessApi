@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace FitnessApi.Dto
+namespace FitnessApi.Dto.User
 {
     public class RegistrationRequestDTO
     {

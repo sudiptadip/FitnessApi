@@ -1,6 +1,7 @@
-﻿using FitnessApi.Dto;
+﻿using FitnessApi.Dto.User;
 using FitnessApi.IRepository;
 using FitnessApi.Model;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
@@ -53,6 +54,13 @@ namespace FitnessApi.Controllers
             var response = await _userRepository.Login(model);
 
             return StatusCode((int)response.StatusCode, response);
+        }
+
+        [HttpGet("Test")]
+        [Authorize]
+        public ActionResult<string[]> Test()
+        {
+            return Ok(new string[]  { "Test 1",  "Test 2"});
         }
 
     }

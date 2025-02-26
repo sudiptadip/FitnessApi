@@ -1,5 +1,5 @@
 ﻿using FitnessApi.Data;
-using FitnessApi.Dto;
+using FitnessApi.Dto.User;
 using FitnessApi.IRepository;
 using FitnessApi.Model;
 using Microsoft.AspNetCore.Identity;
