@@ -1,6 +1,7 @@
 using FitnessApi;
 using FitnessApi.Data;
 using FitnessApi.IRepository;
+using FitnessApi.Mappers.IMappers;
 using FitnessApi.Middleware;
 using FitnessApi.Model;
 using FitnessApi.Repository;
@@ -21,6 +22,16 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFramework
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IInternalServiceRepository, InternalServiceRepository>();
+builder.Services.AddScoped<IUserDetailsRepository, UserDetailsRepository>();
+
+
+builder.Services.Scan(scan => scan
+    .FromAssemblyOf<Program>()
+    .AddClasses(classes => classes.AssignableTo(typeof(IMapper<,>)))
+    .AsImplementedInterfaces()
+    .WithScopedLifetime()
+);
+
 
 builder.Services.AddEndpointsApiExplorer();
 

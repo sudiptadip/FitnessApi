@@ -13,6 +13,7 @@ namespace FitnessApi.Data
         public DbSet<ApplicationUser> ApplicationUser { get; set; }
         public DbSet<InternalService> InternalServices { get; set; }
         public DbSet<AllowedOrigin> AllowedOrigins { get; set; }
+        public DbSet<UserDetail> UserDetails { get; set; }
 
     }
 }

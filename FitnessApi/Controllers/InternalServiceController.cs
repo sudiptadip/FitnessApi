@@ -79,7 +79,6 @@ namespace FitnessApi.Controllers
             }
         }
 
-
         [HttpGet("get-all")]
         public async Task<IActionResult> GetAllServiceName()
         {
