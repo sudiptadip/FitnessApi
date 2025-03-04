@@ -14,6 +14,7 @@ namespace FitnessApi.Data
         public DbSet<InternalService> InternalServices { get; set; }
         public DbSet<AllowedOrigin> AllowedOrigins { get; set; }
         public DbSet<UserDetail> UserDetails { get; set; }
-
+        public DbSet<Meal> Meals { get; set; }
+        public DbSet<MealItem> MealItems { get; set; }
     }
 }

@@ -23,6 +23,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFramework
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IInternalServiceRepository, InternalServiceRepository>();
 builder.Services.AddScoped<IUserDetailsRepository, UserDetailsRepository>();
+builder.Services.AddScoped<IMealRepository, MealRepository>();
 
 
 builder.Services.Scan(scan => scan
