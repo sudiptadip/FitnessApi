@@ -13,7 +13,7 @@ namespace FitnessApi.Dto.MealItem
         [Required]
         public decimal Carbohydrates { get; set; }
         [Required]
-        public int Kcal { get; set; }
+        public decimal Kcal { get; set; }
         [Required]
         public string ServingSize { get; set; }
         [Required]

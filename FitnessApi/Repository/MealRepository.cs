@@ -20,7 +20,7 @@ namespace FitnessApi.Repository
             try
             {
                 var existingMealItems = await _db.MealItems.Where(m => m.MealId == meal.Id).ToListAsync();
-
+                
                 var itemsToRemove =  existingMealItems.Where(e => !meal.MealItems.Any(m => m.Id == e.Id)).ToList();
 
                 _db.MealItems.RemoveRange(itemsToRemove);

@@ -4,6 +4,7 @@ using FitnessApi.IRepository;
 using FitnessApi.Mappers.IMappers;
 using FitnessApi.Mappers.MealMapper;
 using FitnessApi.Model;
+using FitnessApi.Repository;
 using FitnessApi.Utility;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -95,6 +96,35 @@ namespace FitnessApi.Controllers
                 _response.IsSuccess = true;
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Result = mealList.Select(x => _mealMapper.Map(x));
+                return Ok(_response);
+            }
+            catch (Exception)
+            {
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.ErrorMessages.Add(SD.UnexpectedError);
+                return StatusCode(500, _response);
+            }
+        }
+
+        [HttpDelete("delete-meal/{id:int}")]
+        public async Task<IActionResult> DeleteMeal([FromRoute] int id)
+        {
+            try
+            {
+                var meal = await _mealRepository.GetAsync(u => u.Id == id, includeProperties: "MealItems");
+                if (meal == null)
+                {
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.Result = "Meal Not Found";
+                    return NotFound(_response);
+                }
+
+                await _mealRepository.RemoveAsync(meal);
+                _response.IsSuccess = true;
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.Result = "Successfully Deleted";
                 return Ok(_response);
             }
             catch (Exception)

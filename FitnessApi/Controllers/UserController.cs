@@ -57,7 +57,6 @@ namespace FitnessApi.Controllers
         }
 
         [HttpGet("Test")]
-        [Authorize]
         public ActionResult<string[]> Test()
         {
             return Ok(new string[]  { "Test 1",  "Test 2"});

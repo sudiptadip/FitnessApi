@@ -16,6 +16,7 @@ namespace FitnessApi.Mappers.MealMapper
                 MealName = source.MealName,
                 MealItems = source.MealItems?.Select(item => new MealItem
                 {
+                    Id = item.Id,
                     Protein = item.Protein,
                     Fat = item.Fat,
                     Carbohydrates = item.Carbohydrates,
