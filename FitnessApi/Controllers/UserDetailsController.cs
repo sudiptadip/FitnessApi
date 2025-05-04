@@ -1,5 +1,7 @@
-﻿using FitnessApi.Dto.UserDetails;
+﻿using Azure;
+using FitnessApi.Dto.UserDetails;
 using FitnessApi.IRepository;
+using FitnessApi.IService;
 using FitnessApi.Mappers.IMappers;
 using FitnessApi.Model;
 using FitnessApi.Utility;
@@ -20,42 +22,71 @@ namespace FitnessApi.Controllers
         private readonly IMapper<CreateUserDetailsDTO, UserDetail> _createUserDetailsMapper;
         private readonly IMapper<UpdateUserDetailsDTO, UserDetail> _updateUserDetailsMapper;
         private APIResponse _apiResponse;
-        public UserDetailsController(IUserDetailsRepository userDetails, IMapper<UserDetail, UserDetailsDTO> userDetailsMapper, IMapper<CreateUserDetailsDTO, UserDetail> createUserDetailsMapper, IMapper<UpdateUserDetailsDTO, UserDetail> updateUserDetailsMapper)
+        private readonly IImageService _imageService;
+
+        public UserDetailsController(IImageService imageService, IUserDetailsRepository userDetails, IMapper<UserDetail, UserDetailsDTO> userDetailsMapper, IMapper<CreateUserDetailsDTO, UserDetail> createUserDetailsMapper, IMapper<UpdateUserDetailsDTO, UserDetail> updateUserDetailsMapper)
         {
             _userDetails = userDetails;
             _userDetailsMapper = userDetailsMapper;
             _createUserDetailsMapper = createUserDetailsMapper;
             _userDetailsMapper = userDetailsMapper;
             _apiResponse = new APIResponse();
+            _imageService = imageService;
         }
 
         [HttpPost("create-user-details")]
-        public async Task<IActionResult> CreateUserDetails([FromBody] CreateUserDetailsDTO userDetailsDTO)
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> CreateUserDetails([FromForm] CreateUserDetailsDTO dto)
         {
-
             if (!ModelState.IsValid)
             {
                 _apiResponse.IsSuccess = false;
                 _apiResponse.StatusCode = HttpStatusCode.BadRequest;
-                _apiResponse.ErrorMessages = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                _apiResponse.ErrorMessages = ModelState.Values.SelectMany(v => v.Errors)
+                                                           .Select(e => e.ErrorMessage)
+                                                           .ToList();
                 return BadRequest(_apiResponse);
             }
 
             try
             {
-               await _userDetails.CreateAsync(_createUserDetailsMapper.Map(userDetailsDTO));
-                _apiResponse.IsSuccess = true;
-                _apiResponse.StatusCode = HttpStatusCode.Created;
-                _apiResponse.Result = "Successfully Created UserDetails";
+                string? imagePath = null;
 
-                return StatusCode(201, _apiResponse);
+                if (dto.ProfileImage != null)
+                {
+                    imagePath = await _imageService.SaveImageAsync(dto.ProfileImage);
+                }
+
+                var userDetails = new UserDetail
+                {
+                    UserId = dto.UserId,
+                    FitnessGoal = dto.FitnessGoal,
+                    Gender = dto.Gender,
+                    Weight = dto.Weight,
+                    Height = dto.Height,
+                    PreviousFitnessExperience = dto.PreviousFitnessExperience,
+                    SpecificDiet = dto.SpecificDiet,
+                    DaysCommit = dto.DaysCommit,
+                    SpecificExperiencePreferance = dto.SpecificExperiencePreferance,
+                    CalorieyGoal = dto.CalorieyGoal,
+                    SleepQuality = dto.SleepQuality,
+                    ProfileImageUrl = imagePath
+                };
+
+                await _userDetails.CreateAsync(userDetails);
+                await _userDetails.SaveAsync();
+
+                _apiResponse.IsSuccess = true;
+                _apiResponse.StatusCode = HttpStatusCode.OK;
+                _apiResponse.Result = "User details created successfully";
+                return Ok(_apiResponse);
             }
             catch (Exception ex)
             {
                 _apiResponse.IsSuccess = false;
                 _apiResponse.StatusCode = HttpStatusCode.InternalServerError;
-                _apiResponse.ErrorMessages.Add(SD.UnexpectedError);
-                return BadRequest(_apiResponse);
+                _apiResponse.ErrorMessages.Add($"Error while creating user details: {ex.Message}");
+                return StatusCode(500, _apiResponse);
             }
         }
 
@@ -88,7 +119,8 @@ namespace FitnessApi.Controllers
         }
 
         [HttpPost("update-user-details/{userId}")]
-        public async Task<IActionResult> UpdateUserDetails([FromBody] UpdateUserDetailsDTO updateUserDetailsDTO, [FromRoute] string userId)
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> UpdateUserDetails([FromForm] UpdateUserDetailsDTO updateUserDetailsDTO, [FromRoute] string userId)
         {
             if (!ModelState.IsValid)
             {
@@ -100,8 +132,8 @@ namespace FitnessApi.Controllers
 
             try
             {
-                UserDetail userDetail = await _userDetails.GetAsync(u => u.UserId == userId);
-                if(userDetail == null)
+                var userDetail = await _userDetails.GetAsync(u => u.UserId == userId);
+                if (userDetail == null)
                 {
                     _apiResponse.IsSuccess = false;
                     _apiResponse.StatusCode = HttpStatusCode.NotFound;
@@ -109,6 +141,7 @@ namespace FitnessApi.Controllers
                     return NotFound(_apiResponse);
                 }
 
+                // Update fields
                 userDetail.FitnessGoal = updateUserDetailsDTO.FitnessGoal;
                 userDetail.Gender = updateUserDetailsDTO.Gender;
                 userDetail.Weight = updateUserDetailsDTO.Weight;
@@ -120,26 +153,37 @@ namespace FitnessApi.Controllers
                 userDetail.CalorieyGoal = updateUserDetailsDTO.CalorieyGoal;
                 userDetail.SleepQuality = updateUserDetailsDTO.SleepQuality;
 
+                // Optional image update
+                if (updateUserDetailsDTO.ProfileImage != null)
+                {
+                    if(userDetail.ProfileImageUrl == null)
+                    {
+                        string imagePath = await _imageService.SaveImageAsync(updateUserDetailsDTO.ProfileImage);
+                        userDetail.ProfileImageUrl = imagePath;
+                    }
+                    else
+                    {
+                        string imagePath = await _imageService.UpdateImageAsync(userDetail.ProfileImageUrl, updateUserDetailsDTO.ProfileImage);
+                        userDetail.ProfileImageUrl = imagePath;
+                    }
+                        
+                }
 
                 await _userDetails.UpdateUserDetailsAsync(userDetail);
 
                 _apiResponse.IsSuccess = true;
-                _apiResponse.StatusCode = HttpStatusCode.Created;
-                _apiResponse.Result = "Successfully updated userDetails";
-
+                _apiResponse.StatusCode = HttpStatusCode.Accepted;
+                _apiResponse.Result = "Successfully updated user details";
                 return StatusCode(202, _apiResponse);
-
             }
             catch (Exception)
             {
                 _apiResponse.IsSuccess = false;
                 _apiResponse.StatusCode = HttpStatusCode.InternalServerError;
                 _apiResponse.ErrorMessages.Add(SD.UnexpectedError);
-                return BadRequest(_apiResponse);
+                return StatusCode(500, _apiResponse);
             }
-
         }
-
 
 
     }

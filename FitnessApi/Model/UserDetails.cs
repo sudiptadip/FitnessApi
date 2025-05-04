@@ -19,6 +19,8 @@ namespace FitnessApi.Model
         public string CalorieyGoal { get; set; }
         public string SleepQuality { get; set; }
 
+        public string? ProfileImageUrl { get; set; }
+
         public ApplicationUser ApplicationUser { get; set; }
     }
 }

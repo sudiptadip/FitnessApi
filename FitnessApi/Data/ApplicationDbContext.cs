@@ -17,5 +17,6 @@ namespace FitnessApi.Data
         public DbSet<Meal> Meals { get; set; }
         public DbSet<MealItem> MealItems { get; set; }
         public DbSet<DailyActivity> DailyActivities { get; set; }
+        public DbSet<WorkoutImage> WorkoutImages { get; set; }
     }
 }

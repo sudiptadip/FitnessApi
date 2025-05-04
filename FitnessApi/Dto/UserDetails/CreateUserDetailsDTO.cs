@@ -26,5 +26,7 @@ namespace FitnessApi.Dto.UserDetails
         public string CalorieyGoal { get; set; }
         [Required]
         public string SleepQuality { get; set; }
+
+        public IFormFile? ProfileImage { get; set; }
     }
 }

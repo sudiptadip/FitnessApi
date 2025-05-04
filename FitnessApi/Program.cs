@@ -1,10 +1,12 @@
 using FitnessApi;
 using FitnessApi.Data;
 using FitnessApi.IRepository;
+using FitnessApi.IService;
 using FitnessApi.Mappers.IMappers;
 using FitnessApi.Middleware;
 using FitnessApi.Model;
 using FitnessApi.Repository;
+using FitnessApi.Service;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -25,6 +27,7 @@ builder.Services.AddScoped<IInternalServiceRepository, InternalServiceRepository
 builder.Services.AddScoped<IUserDetailsRepository, UserDetailsRepository>();
 builder.Services.AddScoped<IMealRepository, MealRepository>();
 builder.Services.AddScoped<IDailyActivityRepository, DailyActivityRepository>();
+builder.Services.AddScoped<IImageService, ImageService>();
 
 
 builder.Services.Scan(scan => scan
@@ -133,6 +136,7 @@ app.UseSwaggerUI();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseStaticFiles();
 
 app.MapControllers();
 
