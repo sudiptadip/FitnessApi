@@ -163,7 +163,8 @@ namespace FitnessApi.Controllers
                     }
                     else
                     {
-                        string imagePath = await _imageService.UpdateImageAsync(userDetail.ProfileImageUrl, updateUserDetailsDTO.ProfileImage);
+                        //  string imagePath = await _imageService.UpdateImageAsync(userDetail.ProfileImageUrl, updateUserDetailsDTO.ProfileImage);
+                        string imagePath = await _imageService.SaveImageAsync(updateUserDetailsDTO.ProfileImage);
                         userDetail.ProfileImageUrl = imagePath;
                     }
                         

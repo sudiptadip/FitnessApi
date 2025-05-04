@@ -11,9 +11,9 @@ namespace FitnessApi.Dto.UserDetails
         [Required]
         public string Gender { get; set; }
         [Required]
-        public double Weight { get; set; }
+        public string Weight { get; set; }
         [Required]
-        public double Height { get; set; }
+        public string Height { get; set; }
         [Required]
         public bool PreviousFitnessExperience { get; set; }
         [Required]

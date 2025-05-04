@@ -56,10 +56,19 @@ namespace FitnessApi.Controllers
             return StatusCode((int)response.StatusCode, response);
         }
 
-        [HttpGet("Test")]
-        public ActionResult<string[]> Test()
+
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequestDTO model)
         {
-            return Ok(new string[]  { "Test 1",  "Test 2"});
+            var response = await _userRepository.SendOtpForPasswordReset(model.Email);
+            return StatusCode((int)response.StatusCode, response);
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDTO model)
+        {
+            var response = await _userRepository.ResetPasswordWithOtp(model.Email, model.Otp, model.NewPassword);
+            return StatusCode((int)response.StatusCode, response);
         }
 
     }

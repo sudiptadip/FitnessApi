@@ -1,11 +1,13 @@
 ﻿using FitnessApi.Data;
 using FitnessApi.Dto.User;
 using FitnessApi.IRepository;
+using FitnessApi.IService;
 using FitnessApi.Model;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using Org.BouncyCastle.Crypto.Generators;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Security.Claims;
@@ -20,19 +22,22 @@ namespace FitnessApi.Repository
         private readonly ApplicationDbContext _db;
         private readonly ILogger<UserRepository> _logger;
         private readonly string _secretKey;
+        private readonly IEmailService _emailService;
 
         public UserRepository(
             UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager,
             ApplicationDbContext db,
             IConfiguration configuration,
-            ILogger<UserRepository> logger)
+            ILogger<UserRepository> logger,
+            IEmailService emailService)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _db = db;
             _logger = logger;
             _secretKey = configuration.GetValue<string>("ApiSettings:Secret");
+            _emailService = emailService;
         }
 
         public async Task<bool> IsUserExists(string userName)
@@ -155,6 +160,105 @@ namespace FitnessApi.Repository
                 return response;
             }
         }
+
+
+        public async Task<APIResponse> SendOtpForPasswordReset(string email)
+        {
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null)
+            {
+                return new APIResponse { IsSuccess = false, StatusCode = HttpStatusCode.NotFound, ErrorMessages = new List<string> { "Email not found" } };
+            }
+
+            var otp = new Random().Next(100000, 999999).ToString();
+            var otpRecord = new OtpRecord
+            {
+                Email = email,
+                Otp = otp,
+                ExpirationTime = DateTime.UtcNow.AddMinutes(10)
+            };
+
+            await _db.OtpRecords.AddAsync(otpRecord);
+            await _db.SaveChangesAsync();
+
+            _emailService.SendEmail(new SendEmailModel
+            {
+                To = email,
+                Subject = "Password Reset OTP",
+                Body = $"Your OTP is: <b>{otp}</b>. It expires in 10 minutes."
+            });
+
+            return new APIResponse { IsSuccess = true, StatusCode = HttpStatusCode.OK, Result = "OTP sent to email." };
+        }
+
+        public async Task<APIResponse> ResetPasswordWithOtp(string email, string otp, string newPassword)
+        {
+            var record = await _db.OtpRecords
+                .Where(o => o.Email == email && o.Otp == otp && o.ExpirationTime > DateTime.UtcNow)
+                .OrderByDescending(o => o.ExpirationTime)
+                .FirstOrDefaultAsync();
+
+            if (record == null)
+            {
+                return new APIResponse
+                {
+                    IsSuccess = false,
+                    StatusCode = HttpStatusCode.BadRequest,
+                    ErrorMessages = new List<string> { "Invalid or expired OTP" }
+                };
+            }
+
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return new APIResponse
+                {
+                    IsSuccess = false,
+                    StatusCode = HttpStatusCode.NotFound,
+                    ErrorMessages = new List<string> { "User not found" }
+                };
+            }
+
+            // Remove existing password (only works if user has one)
+            var hasPassword = await _userManager.HasPasswordAsync(user);
+            if (hasPassword)
+            {
+                var removeResult = await _userManager.RemovePasswordAsync(user);
+                if (!removeResult.Succeeded)
+                {
+                    return new APIResponse
+                    {
+                        IsSuccess = false,
+                        StatusCode = HttpStatusCode.BadRequest,
+                        ErrorMessages = removeResult.Errors.Select(e => e.Description).ToList()
+                    };
+                }
+            }
+
+            // Add new password
+            var addResult = await _userManager.AddPasswordAsync(user, newPassword);
+            if (!addResult.Succeeded)
+            {
+                return new APIResponse
+                {
+                    IsSuccess = false,
+                    StatusCode = HttpStatusCode.BadRequest,
+                    ErrorMessages = addResult.Errors.Select(e => e.Description).ToList()
+                };
+            }
+
+            // Remove used OTP
+            _db.OtpRecords.Remove(record);
+            await _db.SaveChangesAsync();
+
+            return new APIResponse
+            {
+                IsSuccess = true,
+                StatusCode = HttpStatusCode.OK,
+                Result = "Password reset successful."
+            };
+        }
+
 
     }
 }

@@ -6,8 +6,8 @@
         public string UserId { get; set; }
         public string FitnessGoal { get; set; }
         public string Gender { get; set; }
-        public double Weight { get; set; }
-        public double Height { get; set; }
+        public string Weight { get; set; }
+        public string Height { get; set; }
         public bool PreviousFitnessExperience { get; set; }
         public string SpecificDiet { get; set; }
         public int DaysCommit { get; set; }

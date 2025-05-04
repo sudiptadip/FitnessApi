@@ -8,6 +8,9 @@ namespace FitnessApi.Dto.WorkoutImage
         public int Id { get; set; }
         [Required]
         public string ImageName { get; set; }
-        public IFormFile Image { get; set; }
+
+        [Required]
+        public string Type { get; set; }
+        public IFormFile? Image { get; set; }
     }
 }

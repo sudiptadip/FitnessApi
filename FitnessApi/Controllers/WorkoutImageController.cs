@@ -1,5 +1,6 @@
 ﻿using Azure;
 using FitnessApi.Data;
+using FitnessApi.Dto.UserDetails;
 using FitnessApi.Dto.WorkoutImage;
 using FitnessApi.IService;
 using FitnessApi.Model;
@@ -42,6 +43,7 @@ namespace FitnessApi.Controllers
                 await _db.WorkoutImages.AddAsync(new Model.WorkoutImage
                 {
                     ImageName = createWorkoutImageDto.ImageName!,
+                    Type = createWorkoutImageDto.Type,
                     ImageUrl = imagePath
                 });
 
@@ -65,7 +67,7 @@ namespace FitnessApi.Controllers
 
 
 
-        [HttpPut("update")]
+        [HttpPost("update")]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> Update([FromForm] UpdateWorkoutImageDto updateDto)
         {
@@ -90,10 +92,12 @@ namespace FitnessApi.Controllers
 
                 if (updateDto.Image != null)
                 {
-                    workoutImage.ImageUrl = await _imageService.UpdateImageAsync(workoutImage.ImageUrl, updateDto.Image);
+                    // workoutImage.ImageUrl = await _imageService.UpdateImageAsync(workoutImage.ImageUrl, updateDto.Image);
+                    workoutImage.ImageUrl = await _imageService.SaveImageAsync(updateDto.Image);
                 }
 
                 workoutImage.ImageName = updateDto.ImageName.ToString();
+                workoutImage.Type = updateDto.Type;
 
                 _db.WorkoutImages.Update(workoutImage);
                 await _db.SaveChangesAsync();
@@ -115,7 +119,7 @@ namespace FitnessApi.Controllers
         }
 
 
-        [HttpDelete("delete/{id}")]
+        [HttpPost("delete/{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             try
@@ -129,14 +133,15 @@ namespace FitnessApi.Controllers
                     return NotFound(_response);
                 }
 
-                var imageDeleted = await _imageService.DeleteImageAsync(workoutImage.ImageUrl);
+              //  var imageDeleted = await _imageService.DeleteImageAsync(workoutImage.ImageUrl);
 
                 _db.WorkoutImages.Remove(workoutImage);
                 await _db.SaveChangesAsync();
 
                 _response.IsSuccess = true;
                 _response.StatusCode = HttpStatusCode.OK;
-                _response.Result = imageDeleted ? "Image and record deleted." : "Record deleted, but image not found.";
+               // _response.Result = imageDeleted ? "Image and record deleted." : "Record deleted, but image not found.";
+                _response.Result = "Image deleted Successfully.";
                 return Ok(_response);
             }
             catch (Exception)
@@ -160,6 +165,7 @@ namespace FitnessApi.Controllers
                 {
                     w.Id,
                     w.ImageName,
+                    w.Type,
                     w.ImageUrl
                 })
                 .ToList();
@@ -178,10 +184,6 @@ namespace FitnessApi.Controllers
             }
 
         }
-
-
-
-
 
     }
 }
