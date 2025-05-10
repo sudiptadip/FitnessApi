@@ -11,8 +11,7 @@ namespace FitnessApi.Model
         [ForeignKey("ApplicationUser")]
         public string UserId { get; set; }
         public DateTime Date { get; set; }
-        public double Water { get; set; }
-        public int Step { get; set; }
+        public string Water { get; set; }
         public ApplicationUser ApplicationUser { get; set; }
     }
 }

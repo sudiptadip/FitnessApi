@@ -5,7 +5,7 @@ namespace FitnessApi.IRepository
 {
     public interface IUserRepository
     {
-        public Task<bool> IsUserExists(string userName);
+        public Task<APIResponse> IsUserExists(string userName);
         Task<APIResponse> Login(LoginRequestDTO loginRequest);
         Task<APIResponse> Register(RegistrationRequestDTO registrationRequest);
         Task<APIResponse> SendOtpForPasswordReset(string email);

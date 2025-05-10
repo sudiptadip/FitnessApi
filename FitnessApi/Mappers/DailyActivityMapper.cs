@@ -13,7 +13,6 @@ namespace FitnessApi.Mappers
                 UserId = source.UserId,
                 Date = source.Date,
                 Water = source.Water,
-                Step = source.Step
             };
         }
 
@@ -33,7 +32,6 @@ namespace FitnessApi.Mappers
                 UserId = source.UserId,
                 Date = source.Date,
                 Water = source.Water,
-                Step = source.Step
             };
         }
 
@@ -53,7 +51,6 @@ namespace FitnessApi.Mappers
                 UserId = source.UserId,
                 Date = source.Date,
                 Water = source.Water,
-                Step = source.Step
             };
         }
 

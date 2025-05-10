@@ -2,6 +2,7 @@
 using FitnessApi.IRepository;
 using FitnessApi.Mappers.IMappers;
 using FitnessApi.Model;
+using FitnessApi.Repository;
 using FitnessApi.Utility;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
@@ -46,6 +47,19 @@ namespace FitnessApi.Controllers
 
             try
             {
+
+                var existing = (await _activityRepo
+    .GetAllAsync(a => a.UserId == dto.UserId))
+    .FirstOrDefault(a => a.Date.Date == dto.Date.Date);
+
+                if (existing != null)
+                {
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.Conflict;
+                    _response.ErrorMessages.Add("A record for this user on the same date already exists.");
+                    return Conflict(_response);
+                }
+
                 await _activityRepo.CreateAsync(_createMapper.Map(dto));
                 _response.IsSuccess = true;
                 _response.StatusCode = HttpStatusCode.OK;
@@ -61,7 +75,7 @@ namespace FitnessApi.Controllers
             }
         }
 
-        [HttpPut("update")]
+        [HttpPost("update")]
         public async Task<IActionResult> Update([FromBody] UpdateDailyActivityDTO dto)
         {
             if (!ModelState.IsValid)
@@ -111,7 +125,7 @@ namespace FitnessApi.Controllers
             }
         }
 
-        [HttpDelete("{id:int}")]
+        [HttpPost("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
             try

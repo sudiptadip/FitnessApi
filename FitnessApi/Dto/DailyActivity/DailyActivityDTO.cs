@@ -5,7 +5,6 @@
         public int Id { get; set; }
         public string UserId { get; set; }
         public DateTime Date { get; set; }
-        public double Water { get; set; }
-        public int Step { get; set; }
+        public string Water { get; set; }
     }
 }

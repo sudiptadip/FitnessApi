@@ -50,7 +50,7 @@ namespace FitnessApi.Service
                 try
                 {
                     client.Connect(_emailSettings.EmailHost, _emailSettings.EmailPort, SecureSocketOptions.StartTls);
-                    client.Authenticate(_emailSettings.EmailUsername, "jizx jtbw bvmn fjkb");
+                    client.Authenticate(_emailSettings.EmailUsername, "kljeynzkymsyfytd");
                     client.Send(mailMessage);
                 }
                 catch

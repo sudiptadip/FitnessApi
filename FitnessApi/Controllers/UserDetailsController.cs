@@ -8,6 +8,8 @@ using FitnessApi.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Formats.Asn1;
 using System.Net;
 
 namespace FitnessApi.Controllers
@@ -50,6 +52,18 @@ namespace FitnessApi.Controllers
 
             try
             {
+
+                var isExistingUser = await _userDetails.GetAsync(u => u.UserId == dto.UserId);
+
+                if(isExistingUser != null)
+                {
+                    _apiResponse.IsSuccess = false;
+                    _apiResponse.StatusCode = HttpStatusCode.BadRequest;
+                    _apiResponse.ErrorMessages.Add($"UserDetail already created");
+                    return StatusCode(400, _apiResponse);
+                }
+
+
                 string? imagePath = null;
 
                 if (dto.ProfileImage != null)
@@ -70,7 +84,9 @@ namespace FitnessApi.Controllers
                     SpecificExperiencePreferance = dto.SpecificExperiencePreferance,
                     CalorieyGoal = dto.CalorieyGoal,
                     SleepQuality = dto.SleepQuality,
-                    ProfileImageUrl = imagePath
+                    ProfileImageUrl = imagePath,
+                    Age = dto.Age,
+                    Bmi = (Convert.ToDouble(dto.Weight) / Math.Pow(Convert.ToDouble(dto.Height) * 0.3048, 2)).ToString("F2"),
                 };
 
                 await _userDetails.CreateAsync(userDetails);
@@ -95,17 +111,19 @@ namespace FitnessApi.Controllers
         {
             try
             {
-                UserDetail userDetail = await _userDetails.GetAsync(u => u.UserId == userId);
+                var userDetail = await _userDetails.GetAsync(u => u.UserId == userId);
+
                 if (userDetail == null)
                 {
                     _apiResponse.IsSuccess = false;
                     _apiResponse.StatusCode = HttpStatusCode.NotFound;
-                    _apiResponse.ErrorMessages.Add("User Not Found");
+                    _apiResponse.ErrorMessages.Add("User Details Not Found");
                     return NotFound(_apiResponse);
                 }
                 _apiResponse.IsSuccess = true;
                 _apiResponse.StatusCode = HttpStatusCode.OK;
-                _apiResponse.Result = _userDetailsMapper.Map(userDetail);
+                //_apiResponse.Result = _userDetailsMapper.Map(userDetail);
+                _apiResponse.Result = userDetail;
                 return Ok(_apiResponse);
             }
             catch (Exception)
@@ -152,6 +170,8 @@ namespace FitnessApi.Controllers
                 userDetail.SpecificExperiencePreferance = updateUserDetailsDTO.SpecificExperiencePreferance;
                 userDetail.CalorieyGoal = updateUserDetailsDTO.CalorieyGoal;
                 userDetail.SleepQuality = updateUserDetailsDTO.SleepQuality;
+                userDetail.Age = updateUserDetailsDTO.Age;
+                userDetail.Bmi = (Convert.ToDouble(updateUserDetailsDTO.Weight) / Math.Pow(Convert.ToDouble(updateUserDetailsDTO.Height) * 0.3048, 2)).ToString("F2");
 
                 // Optional image update
                 if (updateUserDetailsDTO.ProfileImage != null)

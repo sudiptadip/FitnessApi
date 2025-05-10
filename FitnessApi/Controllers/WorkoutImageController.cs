@@ -44,7 +44,10 @@ namespace FitnessApi.Controllers
                 {
                     ImageName = createWorkoutImageDto.ImageName!,
                     Type = createWorkoutImageDto.Type,
-                    ImageUrl = imagePath
+                    ImageUrl = imagePath,
+                    Kg = createWorkoutImageDto.Kg,
+                    Reps = createWorkoutImageDto.Reps,
+                    Sets = createWorkoutImageDto.Sets,
                 });
 
                 await _db.SaveChangesAsync();
@@ -98,6 +101,10 @@ namespace FitnessApi.Controllers
 
                 workoutImage.ImageName = updateDto.ImageName.ToString();
                 workoutImage.Type = updateDto.Type;
+                workoutImage.Kg = updateDto.Kg;
+                workoutImage.Reps = updateDto.Reps;
+                workoutImage.Sets = updateDto.Sets;
+
 
                 _db.WorkoutImages.Update(workoutImage);
                 await _db.SaveChangesAsync();
@@ -166,7 +173,10 @@ namespace FitnessApi.Controllers
                     w.Id,
                     w.ImageName,
                     w.Type,
-                    w.ImageUrl
+                    w.ImageUrl,
+                    w.Kg,
+                    w.Sets,
+                    w.Reps
                 })
                 .ToList();
 

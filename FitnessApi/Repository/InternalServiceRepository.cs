@@ -22,10 +22,23 @@ namespace FitnessApi.Repository
                 ServiceValue = createInternalServiceDto.ServiceValue,
             };
 
-            var result = (await _db.InternalServices.AddAsync(service)).Entity;
-            await _db.SaveChangesAsync();
+            var isExistingService = _db.InternalServices.FirstOrDefault(i => i.ServiceName == createInternalServiceDto.ServiceName);
 
-            return result;
+            if(isExistingService == null)
+            {
+                var result = (await _db.InternalServices.AddAsync(service)).Entity;
+
+                await _db.SaveChangesAsync();
+
+                return result;
+            }
+            else
+            {
+                isExistingService.ServiceValue = createInternalServiceDto.ServiceValue;
+                await _db.SaveChangesAsync();
+
+                return isExistingService;
+            }
 
         }
         

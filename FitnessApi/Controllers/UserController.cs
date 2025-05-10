@@ -37,6 +37,14 @@ namespace FitnessApi.Controllers
             return StatusCode((int)response.StatusCode, response);
         }
 
+        [HttpGet("is-user-exists")]
+        public async Task<IActionResult> UserExists([FromQuery] string email)
+        {
+            var response = await _userRepository.IsUserExists(email);
+
+            return StatusCode((int)response.StatusCode, response);
+        }
+
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequestDTO model)
@@ -51,7 +59,7 @@ namespace FitnessApi.Controllers
                 });
             }
 
-            var response = await _userRepository.Login(model);
+            var response = await _userRepository.Login(model);  
 
             return StatusCode((int)response.StatusCode, response);
         }

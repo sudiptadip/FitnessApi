@@ -59,7 +59,7 @@ namespace FitnessApi.Controllers
             }
         }
 
-        [HttpPut("update-meal")]
+        [HttpPost("update-meal")]
         public async Task<IActionResult> UpdateMeal([FromBody] UpdateMealDTO UpdateMealDTO)
         {
             if (!ModelState.IsValid)
@@ -107,7 +107,7 @@ namespace FitnessApi.Controllers
             }
         }
 
-        [HttpDelete("delete-meal/{id:int}")]
+        [HttpPost("delete-meal/{id:int}")]
         public async Task<IActionResult> DeleteMeal([FromRoute] int id)
         {
             try

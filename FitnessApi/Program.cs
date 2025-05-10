@@ -27,6 +27,7 @@ builder.Services.AddScoped<IInternalServiceRepository, InternalServiceRepository
 builder.Services.AddScoped<IUserDetailsRepository, UserDetailsRepository>();
 builder.Services.AddScoped<IMealRepository, MealRepository>();
 builder.Services.AddScoped<IDailyActivityRepository, DailyActivityRepository>();
+builder.Services.AddScoped<IDailyStepActivityRepository, DailyStepActivityRepository>();
 
 builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<IEmailService, EmailService>();

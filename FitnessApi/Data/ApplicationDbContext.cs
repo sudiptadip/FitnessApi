@@ -19,6 +19,7 @@ namespace FitnessApi.Data
         public DbSet<DailyActivity> DailyActivities { get; set; }
         public DbSet<WorkoutImage> WorkoutImages { get; set; }
         public DbSet<OtpRecord> OtpRecords { get; set; }
+        public DbSet<DailyStepActivity> DailyStepActivitys { get; set; }
 
     }
 }

@@ -1,4 +1,5 @@
-﻿using FitnessApi.Data;
+﻿using Azure;
+using FitnessApi.Data;
 using FitnessApi.Dto.User;
 using FitnessApi.IRepository;
 using FitnessApi.IService;
@@ -40,9 +41,34 @@ namespace FitnessApi.Repository
             _emailService = emailService;
         }
 
-        public async Task<bool> IsUserExists(string userName)
+        public async Task<APIResponse> IsUserExists(string userName)
         {
-            return await _userManager.FindByNameAsync(userName) != null;
+            var response = new APIResponse();
+
+            try
+            {
+                response.IsSuccess = true;
+                response.StatusCode = HttpStatusCode.OK;
+                var user = await _db.ApplicationUser.FirstOrDefaultAsync(u => u.Email == userName);
+                if(user == null)
+                {
+                    response.Result = false;
+                }
+                else
+                {
+                    response.Result = true;
+                }
+
+                return response;
+            }
+            catch (Exception)
+            {
+                response.IsSuccess = false;
+                response.StatusCode = HttpStatusCode.InternalServerError;
+                response.ErrorMessages = new List<string> { "An unexpected error occurred. Please try again later." };
+                return response;
+            }
+
         }
 
         public async Task<APIResponse> Register(RegistrationRequestDTO registrationRequest)
@@ -58,7 +84,16 @@ namespace FitnessApi.Repository
 
             try
             {
-                var result = await _userManager.CreateAsync(user, registrationRequest.Password);
+                IdentityResult result;
+
+                if (registrationRequest.Type.ToLower() == "credentials")
+                {
+                    result = await _userManager.CreateAsync(user, registrationRequest.Password);
+                }
+                else
+                {
+                    result = await _userManager.CreateAsync(user, "sUDIPTA__BHATTACHARJEE@123"); // No password
+                }
 
                 if (!result.Succeeded)
                 {
@@ -70,7 +105,6 @@ namespace FitnessApi.Repository
                     return response;
                 }
 
-                // Ensure roles exist before assigning
                 if (!await _roleManager.RoleExistsAsync("admin"))
                 {
                     await _roleManager.CreateAsync(new IdentityRole("admin"));
@@ -79,9 +113,32 @@ namespace FitnessApi.Repository
 
                 await _userManager.AddToRoleAsync(user, "user");
 
+                // Generate token
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var key = Encoding.ASCII.GetBytes(_secretKey);
+                var roles = await _userManager.GetRolesAsync(user);
+
+                var tokenDescriptor = new SecurityTokenDescriptor
+                {
+                    Subject = new ClaimsIdentity(new[]
+                    {
+                new Claim(ClaimTypes.Name, user.UserName),
+                new Claim(ClaimTypes.Role, roles.FirstOrDefault() ?? "user")
+            }),
+                    Expires = DateTime.UtcNow.AddDays(7),
+                    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+                };
+
+                var token = tokenHandler.CreateToken(tokenDescriptor);
+
                 response.IsSuccess = true;
                 response.StatusCode = HttpStatusCode.OK;
-                response.Result = "Successfully user create";
+                response.Result = new LoginResponseDTO
+                {
+                    Token = tokenHandler.WriteToken(token),
+                    UserName = user.UserName,
+                    Id = user.Id
+                };
 
                 return response;
             }
@@ -95,6 +152,7 @@ namespace FitnessApi.Repository
                 return response;
             }
         }
+
 
         public async Task<APIResponse> Login(LoginRequestDTO loginRequest)
         {
@@ -112,27 +170,31 @@ namespace FitnessApi.Repository
                     return response;
                 }
 
-                bool isValid = await _userManager.CheckPasswordAsync(user, loginRequest.Password);
-
-                if (!isValid)
+                if (loginRequest.Type.ToLower() == "credentials")
                 {
-                    response.IsSuccess = false;
-                    response.StatusCode = HttpStatusCode.BadRequest;
-                    response.ErrorMessages = new List<string> { "Invalid username or password." };
-                    return response;
+                    bool isValid = await _userManager.CheckPasswordAsync(user, loginRequest.Password);
+
+                    if (!isValid)
+                    {
+                        response.IsSuccess = false;
+                        response.StatusCode = HttpStatusCode.BadRequest;
+                        response.ErrorMessages = new List<string> { "Invalid username or password." };
+                        return response;
+                    }
                 }
 
+                // For Google/Facebook, skip password check
                 var roles = await _userManager.GetRolesAsync(user);
                 var tokenHandler = new JwtSecurityTokenHandler();
                 var key = Encoding.ASCII.GetBytes(_secretKey);
 
                 var tokenDescriptor = new SecurityTokenDescriptor
                 {
-                    Subject = new ClaimsIdentity(new Claim[]
+                    Subject = new ClaimsIdentity(new[]
                     {
                 new Claim(ClaimTypes.Name, user.UserName),
                 new Claim(ClaimTypes.Role, roles.FirstOrDefault() ?? "user")
-                    }),
+            }),
                     Expires = DateTime.UtcNow.AddDays(7),
                     SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
                 };
@@ -145,7 +207,7 @@ namespace FitnessApi.Repository
                 {
                     Token = tokenHandler.WriteToken(token),
                     UserName = user.UserName,
-                    Id = user.Id,
+                    Id = user.Id
                 };
 
                 return response;
@@ -167,10 +229,15 @@ namespace FitnessApi.Repository
             var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email);
             if (user == null)
             {
-                return new APIResponse { IsSuccess = false, StatusCode = HttpStatusCode.NotFound, ErrorMessages = new List<string> { "Email not found" } };
+                return new APIResponse
+                {
+                    IsSuccess = false,
+                    StatusCode = HttpStatusCode.NotFound,
+                    ErrorMessages = new List<string> { "Email not found" }
+                };
             }
 
-            var otp = new Random().Next(100000, 999999).ToString();
+            var otp = new Random().Next(1000, 9999).ToString(); // 4-digit OTP
             var otpRecord = new OtpRecord
             {
                 Email = email,
@@ -188,8 +255,14 @@ namespace FitnessApi.Repository
                 Body = $"Your OTP is: <b>{otp}</b>. It expires in 10 minutes."
             });
 
-            return new APIResponse { IsSuccess = true, StatusCode = HttpStatusCode.OK, Result = "OTP sent to email." };
+            return new APIResponse
+            {
+                IsSuccess = true,
+                StatusCode = HttpStatusCode.OK,
+                Result = "OTP sent to email."
+            };
         }
+
 
         public async Task<APIResponse> ResetPasswordWithOtp(string email, string otp, string newPassword)
         {

@@ -18,7 +18,8 @@ namespace FitnessApi.Model
         public string SpecificExperiencePreferance { get; set; }
         public string CalorieyGoal { get; set; }
         public string SleepQuality { get; set; }
-
+        public string Age { get; set; }
+        public string Bmi { get; set; }
         public string? ProfileImageUrl { get; set; }
 
         public ApplicationUser ApplicationUser { get; set; }
